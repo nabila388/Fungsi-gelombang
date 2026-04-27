@@ -1,13 +1,17 @@
 <!doctype html>
 <html lang="id" class="h-full">
- <head>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quantum Wave Function Simulator</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
+  <!-- Tailwind & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Outfit:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Outfit', sans-serif; margin: 0; }
@@ -16,460 +20,126 @@
     .tab-active { background: #0f172a; color: #38bdf8; border-bottom: 2px solid #38bdf8; }
     .tab-inactive { background: transparent; color: #94a3b8; border-bottom: 2px solid transparent; }
     .tab-inactive:hover { color: #cbd5e8; }
-    .slider-container input[type="range"] {
-      -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
-      border-radius: 3px; background: #1e293b; outline: none;
-    }
-    .slider-container input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
-      border-radius: 50%; background: #38bdf8; cursor: pointer; border: 2px solid #0f172a;
-    }
     .theory-card { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; border-radius: 12px; }
     .glow { box-shadow: 0 0 20px rgba(56,189,248,0.15); }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    .fade-in { animation: fadeIn 0.4s ease-out; }
     .scroll-wrap { overflow-y: auto; overflow-x: hidden; }
   </style>
-  <style>body { box-sizing: border-box; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
- </head>
- <body class="h-full bg-[#020617] text-gray-200">
-  <div id="app" class="h-full w-full flex flex-col scroll-wrap"><!-- Header -->
-   <header class="flex-shrink-0 px-4 py-4 md:px-8 border-b border-slate-800">
-    <div class="flex items-center gap-3">
-     <div class="w-9 h-9 rounded-lg bg-sky-500/20 flex items-center justify-center"><span class="text-sky-400 text-lg font-bold mono">ψ</span>
-     </div>
-     <div>
-      <h1 id="mainTitle" class="text-lg md:text-xl font-bold text-white leading-tight">Simulasi Fungsi Gelombang Kuantum</h1>
-      <p class="text-xs text-slate-500">Visualisasi Interaktif Mekanika Kuantum</p>
-     </div>
-    </div>
-   </header><!-- Tabs -->
-   <nav class="flex-shrink-0 flex border-b border-slate-800 px-4 md:px-8 gap-1 overflow-x-auto"><button onclick="switchTab('sim')" id="tabSim" class="tab-active px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all">Simulasi</button> <button onclick="switchTab('theory')" id="tabTheory" class="tab-inactive px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all">Teori</button>
-   </nav><!-- Simulation Tab -->
-   <div id="panelSim" class="flex-1 flex flex-col lg:flex-row gap-4 p-4 md:p-6"><!-- Controls -->
-    <aside class="flex-shrink-0 lg:w-72 space-y-4 fade-in">
-     <div class="theory-card p-4 space-y-4">
-      <h2 class="text-sm font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2"><i data-lucide="sliders-horizontal" style="width:16px;height:16px;"></i> Parameter</h2><!-- Potential Type -->
-      <div><label class="text-xs text-slate-400 mb-1 block">Jenis Potensial</label> <select id="potentialType" onchange="updateSim()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"> <option value="free">Partikel Bebas</option> <option value="infinite_well" selected>Sumur Potensial Tak Hingga</option> <option value="harmonic">Osilator Harmonik</option> <option value="barrier">Penghalang Potensial</option> <option value="finite_well">Sumur Potensial Hingga</option> </select>
-      </div><!-- Quantum Number -->
-      <div class="slider-container">
-       <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Bilangan Kuantum (n)</span><span id="nVal" class="mono text-sky-400">1</span>
-       </div><input type="range" id="nSlider" min="1" max="8" value="1" step="1" oninput="updateSim()">
-      </div><!-- Energy -->
-      <div class="slider-container">
-       <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Energi (E)</span><span id="eVal" class="mono text-emerald-400">1.00</span>
-       </div><input type="range" id="eSlider" min="0.5" max="10" value="1" step="0.25" oninput="updateSim()">
-      </div><!-- Well Width / Position -->
-      <div class="slider-container">
-       <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Lebar Sumur (L)</span><span id="lVal" class="mono text-amber-400">1.00</span>
-       </div><input type="range" id="lSlider" min="0.5" max="3" value="1" step="0.1" oninput="updateSim()">
-      </div><!-- Time -->
-      <div class="slider-container">
-       <div class="flex justify-between text-xs text-slate-400 mb-1"><span>Waktu (t)</span><span id="tVal" class="mono text-purple-400">0.00</span>
-       </div><input type="range" id="tSlider" min="0" max="6.28" value="0" step="0.05" oninput="updateSim()">
-      </div><!-- Animate --> <button id="animBtn" onclick="toggleAnim()" class="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold py-2 rounded-lg transition-colors"> <i data-lucide="play" style="width:16px;height:16px;"></i> <span id="animLabel">Animasi</span> </button>
-     </div><!-- Info Card -->
-     <div id="infoCard" class="theory-card p-4 space-y-2 text-xs text-slate-400">
-      <div class="flex items-center gap-2 text-sky-400 font-bold text-sm"><i data-lucide="info" style="width:14px;height:14px;"></i> Info Keadaan
-      </div>
-      <div id="infoContent"></div>
-     </div>
-    </aside><!-- Graphs -->
-    <div class="flex-1 flex flex-col gap-4 min-w-0 fade-in"><!-- Psi graph -->
-     <div class="theory-card glow p-4 flex-1 min-h-0 flex flex-col">
-      <div class="flex items-center justify-between mb-2">
-       <h3 class="text-sm font-bold text-white">Fungsi Gelombang ψ(x,t)</h3>
-       <div class="flex gap-3 text-xs"><span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-sky-400 inline-block rounded"></span> Re(ψ)</span> <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-rose-400 inline-block rounded"></span> Im(ψ)</span> <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-amber-400 inline-block rounded"></span> |ψ|</span>
-       </div>
-      </div>
-      <div class="flex-1 min-h-0 relative">
-       <canvas id="canvasPsi" class="w-full h-full rounded-lg"></canvas>
-      </div>
-     </div><!-- Probability graph -->
-     <div class="theory-card glow p-4 flex-1 min-h-0 flex flex-col">
-      <div class="flex items-center justify-between mb-2">
-       <h3 class="text-sm font-bold text-white">Densitas Probabilitas |ψ(x,t)|²</h3><span class="flex items-center gap-1 text-xs"><span class="w-3 h-0.5 bg-emerald-400 inline-block rounded"></span> |ψ|²</span>
-      </div>
-      <div class="flex-1 min-h-0 relative">
-       <canvas id="canvasProb" class="w-full h-full rounded-lg"></canvas>
-      </div>
-     </div><!-- Potential graph -->
-     <div class="theory-card p-4 flex-shrink-0" style="height:140px;">
-      <div class="flex items-center justify-between mb-2">
-       <h3 class="text-sm font-bold text-white">Potensial V(x)</h3><span class="flex items-center gap-1 text-xs"><span class="w-3 h-0.5 bg-orange-400 inline-block rounded"></span> V(x)</span>
-      </div>
-      <div class="h-16 relative">
-       <canvas id="canvasV" class="w-full h-full rounded-lg"></canvas>
-      </div>
-     </div>
-    </div>
-   </div><!-- Theory Tab -->
-   <div id="panelTheory" class="hidden flex-1 p-4 md:p-6 scroll-wrap fade-in">
-    <div class="max-w-3xl mx-auto space-y-6">
-     <div class="theory-card p-6 space-y-3">
-      <h2 class="text-lg font-bold text-sky-400 flex items-center gap-2"><i data-lucide="atom" style="width:20px;height:20px;"></i> Persamaan Schrödinger</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">Persamaan fundamental mekanika kuantum yang menentukan evolusi temporal fungsi gelombang:</p>
-      <div class="bg-slate-900/80 rounded-lg p-4 mono text-sm text-center text-sky-300">
-       iℏ ∂ψ/∂t = −(ℏ²/2m) ∂²ψ/∂x² + V(x)ψ
-      </div>
-      <p class="text-xs text-slate-400">Di mana ℏ adalah konstanta Planck tereduksi, m adalah massa partikel, dan V(x) adalah potensial.</p>
-     </div>
-     <div class="theory-card p-6 space-y-3">
-      <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2"><i data-lucide="bar-chart-3" style="width:20px;height:20px;"></i> Fungsi Gelombang ψ(x,t)</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">Fungsi gelombang ψ(x,t) adalah fungsi bernilai kompleks yang mendeskripsikan keadaan kuantum partikel secara lengkap. Fungsi ini mengandung seluruh informasi tentang sistem.</p>
-      <ul class="text-sm text-slate-400 space-y-1 list-disc list-inside">
-       <li><strong class="text-white">Bagian Real:</strong> Re(ψ) — komponen osilasi nyata</li>
-       <li><strong class="text-white">Bagian Imajiner:</strong> Im(ψ) — komponen osilasi imajiner</li>
-       <li><strong class="text-white">Amplitudo:</strong> |ψ| = √(Re² + Im²)</li>
-      </ul>
-      <div class="bg-slate-900/80 rounded-lg p-3 text-xs text-slate-400"><strong class="text-sky-400">↔ Hubungan dengan Grafik:</strong> Grafik ψ(x) di simulasi menunjukkan ketiga komponen ini. Perhatikan bagaimana bentuk berubah saat Anda mengubah bilangan kuantum n dan waktu t.
-      </div>
-     </div>
-     <div class="theory-card p-6 space-y-3">
-      <h2 class="text-lg font-bold text-purple-400 flex items-center gap-2"><i data-lucide="target" style="width:20px;height:20px;"></i> Densitas Probabilitas |ψ|²</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">Interpretasi Born: |ψ(x,t)|² memberikan probabilitas menemukan partikel pada posisi x pada waktu t. Ini adalah kuantitas yang terukur secara eksperimen.</p>
-      <div class="bg-slate-900/80 rounded-lg p-4 mono text-sm text-center text-emerald-300">
-       P(a ≤ x ≤ b) = ∫ₐᵇ |ψ(x,t)|² dx
-      </div>
-      <div class="bg-slate-900/80 rounded-lg p-3 text-xs text-slate-400"><strong class="text-emerald-400">↔ Hubungan dengan Grafik:</strong> Grafik |ψ|² menunjukkan di mana partikel paling mungkin ditemukan. Puncak = probabilitas tinggi, nol = node (titik nol probabilitas).
-      </div>
-     </div>
-     <div class="theory-card p-6 space-y-3">
-      <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i data-lucide="layers" style="width:20px;height:20px;"></i> Parameter &amp; Pengaruhnya</h2>
-      <div class="space-y-4 text-sm">
-       <div>
-        <h3 class="font-semibold text-white mb-1">Posisi (x)</h3>
-        <p class="text-slate-400">Variabel ruang tempat ψ didefinisikan. Untuk 1D: ψ(x,t). Distribusi |ψ|² sepanjang x menentukan di mana partikel berada.</p>
-       </div>
-       <div>
-        <h3 class="font-semibold text-white mb-1">Waktu (t)</h3>
-        <p class="text-slate-400">Evolusi temporal diatur faktor e<sup>−iEt/ℏ</sup>. Bagian real dan imajiner berosilasi, tetapi |ψ|² untuk keadaan stasioner tetap konstan.</p>
-        <div class="bg-slate-900/80 rounded-lg p-2 mt-1 text-xs text-purple-300">
-         ↔ Coba geser slider waktu dan perhatikan ψ berosilasi sementara |ψ|² tetap!
-        </div>
-       </div>
-       <div>
-        <h3 class="font-semibold text-white mb-1">Energi (E) &amp; Bilangan Kuantum (n)</h3>
-        <p class="text-slate-400">Untuk sumur tak hingga: Eₙ = n²π²ℏ²/(2mL²). Energi terkuantisasi — hanya nilai diskrit yang diizinkan. Semakin besar n, semakin banyak node.</p>
-        <div class="bg-slate-900/80 rounded-lg p-2 mt-1 text-xs text-amber-300">
-         ↔ Naikkan n pada simulasi dan hitung jumlah node = n−1
-        </div>
-       </div>
-      </div>
-     </div>
-     <div class="theory-card p-6 space-y-3">
-      <h2 class="text-lg font-bold text-rose-400 flex items-center gap-2"><i data-lucide="box" style="width:20px;height:20px;"></i> Jenis Potensial</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-       <div class="bg-slate-900/60 rounded-lg p-3">
-        <h4 class="font-semibold text-white">Partikel Bebas</h4>
-        <p class="text-xs text-slate-400 mt-1">V(x) = 0. Gelombang bidang berjalan. Energi kontinu, tidak terkuantisasi.</p>
-       </div>
-       <div class="bg-slate-900/60 rounded-lg p-3">
-        <h4 class="font-semibold text-white">Sumur Tak Hingga</h4>
-        <p class="text-xs text-slate-400 mt-1">V = 0 di dalam, V = ∞ di luar. ψ = 0 di batas. Solusi: sin(nπx/L).</p>
-       </div>
-       <div class="bg-slate-900/60 rounded-lg p-3">
-        <h4 class="font-semibold text-white">Osilator Harmonik</h4>
-        <p class="text-xs text-slate-400 mt-1">V(x) = ½mω²x². Eₙ = (n+½)ℏω. Solusi melibatkan polinomial Hermite.</p>
-       </div>
-       <div class="bg-slate-900/60 rounded-lg p-3">
-        <h4 class="font-semibold text-white">Penghalang Potensial</h4>
-        <p class="text-xs text-slate-400 mt-1">Efek terowongan kuantum: partikel dapat menembus penghalang meskipun E &lt; V₀!</p>
-       </div>
-      </div>
-     </div>
-    </div>
-   </div>
+</head>
+
+<body class="h-full bg-[#020617] text-gray-200">
+
+<div id="app" class="h-full w-full flex flex-col scroll-wrap">
+
+<!-- HEADER -->
+<header class="px-4 py-4 border-b border-slate-800">
+  <h1 class="text-xl font-bold text-white">Simulasi Fungsi Gelombang Kuantum</h1>
+</header>
+
+<!-- TABS -->
+<nav class="flex border-b border-slate-800 px-4 gap-1">
+  <button onclick="switchTab('sim')" id="tabSim" class="tab-active px-4 py-2 text-sm">Simulasi</button>
+  <button onclick="switchTab('theory')" id="tabTheory" class="tab-inactive px-4 py-2 text-sm">Teori</button>
+</nav>
+
+<!-- SIM -->
+<div id="panelSim" class="flex-1 flex flex-col gap-4 p-4">
+
+  <!-- SLIDERS -->
+  <div class="space-y-3">
+    <input type="range" id="nSlider" min="1" max="8" value="1" oninput="updateSim()">
+    <input type="range" id="eSlider" min="0.5" max="10" value="1" step="0.25" oninput="updateSim()">
+    <input type="range" id="lSlider" min="0.5" max="3" value="1" step="0.1" oninput="updateSim()">
+    <input type="range" id="tSlider" min="0" max="6.28" value="0" step="0.05" oninput="updateSim()">
   </div>
-  <script>
-// === Element SDK ===
-const defaultConfig = {
-  main_title: 'Simulasi Fungsi Gelombang Kuantum',
-  background_color: '#020617',
-  surface_color: '#0f172a',
-  text_color: '#e2e8f0',
-  primary_action_color: '#0284c7',
-  secondary_action_color: '#38bdf8',
-  font_family: 'Outfit',
-  font_size: 16
-};
 
-function applyConfig(config) {
-  const el = (id) => document.getElementById(id);
-  const title = el('mainTitle');
-  if (title) title.textContent = config.main_title || defaultConfig.main_title;
+  <!-- CANVAS -->
+  <canvas id="canvasPsi" style="width:100%;height:250px;"></canvas>
+  <canvas id="canvasProb" style="width:100%;height:250px;"></canvas>
+  <canvas id="canvasV" style="width:100%;height:150px;"></canvas>
 
-  document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
-  document.body.style.color = config.text_color || defaultConfig.text_color;
-  const font = config.font_family || defaultConfig.font_family;
-  document.body.style.fontFamily = `${font}, Outfit, sans-serif`;
-  const sz = config.font_size || defaultConfig.font_size;
-  document.body.style.fontSize = sz + 'px';
-}
+</div>
 
-window.elementSdk.init({
-  defaultConfig,
-  onConfigChange: async (config) => applyConfig(config),
-  mapToCapabilities: (config) => ({
-    recolorables: [
-      { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
-      { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
-      { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
-      { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: v => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
-      { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: v => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } },
-    ],
-    borderables: [],
-    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
-    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
-  }),
-  mapToEditPanelValues: (config) => new Map([
-    ['main_title', config.main_title || defaultConfig.main_title]
-  ])
-});
+<!-- THEORY -->
+<div id="panelTheory" class="hidden p-4">
+  <p>Penjelasan teori mekanika kuantum...</p>
+</div>
 
-// === Tab Switching ===
+</div>
+
+<script>
 function switchTab(tab) {
   document.getElementById('panelSim').classList.toggle('hidden', tab !== 'sim');
   document.getElementById('panelTheory').classList.toggle('hidden', tab !== 'theory');
-  document.getElementById('tabSim').className = tab === 'sim' ? 'tab-active px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all' : 'tab-inactive px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all';
-  document.getElementById('tabTheory').className = tab === 'theory' ? 'tab-active px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all' : 'tab-inactive px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all';
 }
 
-// === Animation ===
-let animating = false, animFrame = null;
-function toggleAnim() {
-  animating = !animating;
-  document.getElementById('animLabel').textContent = animating ? 'Berhenti' : 'Animasi';
-  if (animating) animLoop();
-  else if (animFrame) cancelAnimationFrame(animFrame);
-}
-function animLoop() {
-  if (!animating) return;
-  const sl = document.getElementById('tSlider');
-  let v = parseFloat(sl.value) + 0.04;
-  if (v > 6.28) v = 0;
-  sl.value = v;
-  updateSim();
-  animFrame = requestAnimationFrame(animLoop);
-}
-
-// === Physics ===
-function getParams() {
-  const n = parseInt(document.getElementById('nSlider').value);
-  const E = parseFloat(document.getElementById('eSlider').value);
-  const L = parseFloat(document.getElementById('lSlider').value);
-  const t = parseFloat(document.getElementById('tSlider').value);
-  const type = document.getElementById('potentialType').value;
-  document.getElementById('nVal').textContent = n;
-  document.getElementById('eVal').textContent = E.toFixed(2);
-  document.getElementById('lVal').textContent = L.toFixed(2);
-  document.getElementById('tVal').textContent = t.toFixed(2);
-  return { n, E, L, t, type };
-}
-
-function hermite(n, x) {
-  if (n === 0) return 1;
-  if (n === 1) return 2 * x;
-  let h0 = 1, h1 = 2 * x;
-  for (let i = 2; i <= n; i++) {
-    const h2 = 2 * x * h1 - 2 * (i - 1) * h0;
-    h0 = h1; h1 = h2;
-  }
-  return h1;
-}
-
-function factorial(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
-
-function computeWavefunction(x, params) {
-  const { n, E, L, t, type } = params;
-  const pi = Math.PI;
-  let reP = 0, imP = 0;
-
-  if (type === 'free') {
-    const k = 2 * pi * E / L;
-    reP = Math.cos(k * x - E * t);
-    imP = Math.sin(k * x - E * t);
-  } else if (type === 'infinite_well') {
-    const norm = Math.sqrt(2 / L);
-    const spatial = norm * Math.sin(n * pi * x / L);
-    const En = n * n * pi * pi / (2 * L * L);
-    reP = spatial * Math.cos(-En * t);
-    imP = spatial * Math.sin(-En * t);
-  } else if (type === 'harmonic') {
-    const omega = E;
-    const idx = n - 1;
-    const alpha = Math.sqrt(omega);
-    const xi = alpha * x;
-    const Hn = hermite(idx, xi);
-    const norm = Math.pow(alpha / pi, 0.25) / Math.sqrt(Math.pow(2, idx) * factorial(idx));
-    const spatial = norm * Hn * Math.exp(-xi * xi / 2);
-    const En = (idx + 0.5) * omega;
-    reP = spatial * Math.cos(-En * t);
-    imP = spatial * Math.sin(-En * t);
-  } else if (type === 'barrier') {
-    const V0 = E * 2;
-    const bw = 0.3 * L;
-    const bc = 0;
-    if (x < bc - bw / 2 || x > bc + bw / 2) {
-      const k = 2 * pi * E / L;
-      reP = Math.cos(k * x - E * t);
-      imP = Math.sin(k * x - E * t);
-    } else {
-      const kappa = Math.sqrt(2 * Math.abs(V0 - E));
-      const decay = Math.exp(-kappa * Math.abs(x - bc));
-      reP = decay * Math.cos(-E * t);
-      imP = decay * Math.sin(-E * t);
-    }
-  } else if (type === 'finite_well') {
-    const V0 = E * 3;
-    if (Math.abs(x) < L / 2) {
-      const k = Math.sqrt(2 * E);
-      const spatial = (n % 2 === 1) ? Math.cos(k * n * pi * x / L) : Math.sin(k * n * pi * x / L);
-      const En = n * n * pi * pi / (2 * L * L);
-      reP = spatial * Math.cos(-En * t);
-      imP = spatial * Math.sin(-En * t);
-    } else {
-      const kappa = Math.sqrt(2 * (V0 - E));
-      const decay = Math.exp(-kappa * (Math.abs(x) - L / 2));
-      const En = n * n * pi * pi / (2 * L * L);
-      reP = decay * Math.cos(-En * t) * (x > 0 ? ((n % 2 === 1) ? 1 : (n % 4 === 0 ? -1 : 1)) : 1);
-      imP = decay * Math.sin(-En * t);
-    }
-  }
-  return { re: reP, im: imP };
-}
-
-function getPotential(x, params) {
-  const { E, L, type } = params;
-  if (type === 'free') return 0;
-  if (type === 'infinite_well') return (x <= 0 || x >= L) ? 10 : 0;
-  if (type === 'harmonic') return 0.5 * E * x * x;
-  if (type === 'barrier') {
-    const bw = 0.3 * L, bc = 0;
-    return (x >= bc - bw / 2 && x <= bc + bw / 2) ? E * 2 : 0;
-  }
-  if (type === 'finite_well') return (Math.abs(x) < L / 2) ? 0 : E * 3;
-  return 0;
-}
-
-function getXRange(params) {
-  const { L, type } = params;
-  if (type === 'infinite_well') return [-0.2 * L, L * 1.2];
-  if (type === 'harmonic') return [-3 * L, 3 * L];
-  return [-2 * L, 2 * L];
-}
-
-// === Drawing ===
-function setupCanvas(canvas) {
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  return { ctx, w: rect.width, h: rect.height };
-}
-
-function drawGraph(canvas, data, colors, yRange) {
-  const { ctx, w, h } = setupCanvas(canvas);
-  ctx.clearRect(0, 0, w, h);
-
-  // Grid
-  ctx.strokeStyle = '#1e293b';
-  ctx.lineWidth = 1;
-  const gridY = h / 2;
-  ctx.beginPath(); ctx.moveTo(0, gridY); ctx.lineTo(w, gridY); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(40, 0); ctx.lineTo(40, h); ctx.stroke();
-
-  // Axis labels
-  ctx.fillStyle = '#475569';
-  ctx.font = '10px JetBrains Mono';
-  ctx.fillText('x', w - 14, gridY - 4);
-  const [yMin, yMax] = yRange;
-  ctx.fillText(yMax.toFixed(1), 2, 12);
-  ctx.fillText(yMin.toFixed(1), 2, h - 4);
-
-  const plotW = w - 50;
-  const plotH = h - 10;
-  const range = yMax - yMin || 1;
-
-  data.forEach((series, si) => {
-    ctx.beginPath();
-    ctx.strokeStyle = colors[si];
-    ctx.lineWidth = 1.8;
-    series.forEach((v, i) => {
-      const px = 45 + (i / (series.length - 1)) * plotW;
-      const py = 5 + (1 - (v - yMin) / range) * plotH;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    });
-    ctx.stroke();
-  });
-
-  // Fill for last series if probability
-  if (data.length === 1 && colors[0] === '#34d399') {
-    ctx.beginPath();
-    ctx.fillStyle = 'rgba(52,211,153,0.15)';
-    data[0].forEach((v, i) => {
-      const px = 45 + (i / (data[0].length - 1)) * plotW;
-      const py = 5 + (1 - (v - yMin) / range) * plotH;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    });
-    const baseY = 5 + (1 - (0 - yMin) / range) * plotH;
-    ctx.lineTo(45 + plotW, baseY);
-    ctx.lineTo(45, baseY);
-    ctx.closePath();
-    ctx.fill();
-  }
+function computeWavefunction(x, n, t) {
+  return {
+    re: Math.sin(n * Math.PI * x) * Math.cos(t),
+    im: Math.sin(n * Math.PI * x) * Math.sin(t)
+  };
 }
 
 function updateSim() {
-  const params = getParams();
-  const [xMin, xMax] = getXRange(params);
-  const N = 400;
-  const dx = (xMax - xMin) / (N - 1);
+  const canvas = document.getElementById('canvasPsi');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
 
-  const reArr = [], imArr = [], ampArr = [], probArr = [], potArr = [];
+  const n = parseInt(document.getElementById('nSlider').value);
+  const t = parseFloat(document.getElementById('tSlider').value);
 
-  for (let i = 0; i < N; i++) {
-    const x = xMin + i * dx;
-    const { re, im } = computeWavefunction(x, params);
-    reArr.push(re);
-    imArr.push(im);
-    ampArr.push(Math.sqrt(re * re + im * im));
-    probArr.push(re * re + im * im);
-    potArr.push(getPotential(x, params));
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.beginPath();
+
+  for(let i=0;i<canvas.width;i++){
+    const x = i/canvas.width;
+    const {re} = computeWavefunction(x,n,t);
+    const y = canvas.height/2 - re*100;
+    if(i===0) ctx.moveTo(i,y);
+    else ctx.lineTo(i,y);
   }
 
-  const allPsi = [...reArr, ...imArr, ...ampArr];
-  const psiMax = Math.max(0.1, Math.max(...allPsi.map(Math.abs)));
-  drawGraph(document.getElementById('canvasPsi'), [reArr, imArr, ampArr], ['#38bdf8', '#fb7185', '#fbbf24'], [-psiMax * 1.1, psiMax * 1.1]);
+  ctx.stroke();
 
-  const probMax = Math.max(0.01, Math.max(...probArr));
-  drawGraph(document.getElementById('canvasProb'), [probArr], ['#34d399'], [0, probMax * 1.15]);
+  // probability
+  const ctx2 = document.getElementById('canvasProb').getContext('2d');
+  const c2 = document.getElementById('canvasProb');
+  c2.width = c2.clientWidth;
+  c2.height = c2.clientHeight;
+  ctx2.clearRect(0,0,c2.width,c2.height);
 
-  const potMax = Math.max(0.1, Math.max(...potArr.filter(v => v < 100)));
-  drawGraph(document.getElementById('canvasV'), [potArr.map(v => Math.min(v, potMax * 1.2))], ['#fb923c'], [0, potMax * 1.2 || 1]);
+  ctx2.beginPath();
+  for(let i=0;i<c2.width;i++){
+    const x=i/c2.width;
+    const {re,im}=computeWavefunction(x,n,t);
+    const prob=re*re+im*im;
+    const y=c2.height - prob*200;
+    if(i===0) ctx2.moveTo(i,y);
+    else ctx2.lineTo(i,y);
+  }
+  ctx2.stroke();
 
-  updateInfo(params);
+  // potential dummy
+  const ctx3 = document.getElementById('canvasV').getContext('2d');
+  const c3 = document.getElementById('canvasV');
+  c3.width = c3.clientWidth;
+  c3.height = c3.clientHeight;
+  ctx3.clearRect(0,0,c3.width,c3.height);
+
+  ctx3.beginPath();
+  for(let i=0;i<c3.width;i++){
+    const x=i/c3.width;
+    const v = (x<0.2||x>0.8)?1:0;
+    const y=c3.height - v*100;
+    if(i===0) ctx3.moveTo(i,y);
+    else ctx3.lineTo(i,y);
+  }
+  ctx3.stroke();
 }
 
-function updateInfo(p) {
-  const info = document.getElementById('infoContent');
-  const descs = {
-    free: `<p><strong class="text-white">Partikel Bebas</strong></p><p>V(x) = 0. Gelombang bidang berjalan dengan k = 2πE/L. Energi kontinu, spektrum tidak terkuantisasi.</p><p class="mt-1">Eₙ = ℏ²k²/2m</p>`,
-    infinite_well: `<p><strong class="text-white">Sumur Potensial Tak Hingga</strong></p><p>ψₙ(x) = √(2/L) sin(nπx/L)</p><p>Eₙ = n²π²ℏ²/(2mL²)</p><p class="mt-1">Node: ${p.n - 1} | Energi ∝ n²</p>`,
-    harmonic: `<p><strong class="text-white">Osilator Harmonik</strong></p><p>Eₙ = (n−½)ℏω, ω = ${p.E.toFixed(2)}</p><p>Solusi melibatkan polinomial Hermite H<sub>${p.n - 1}</sub>(x)</p>`,
-    barrier: `<p><strong class="text-white">Penghalang Potensial</strong></p><p>V₀ = ${(p.E * 2).toFixed(2)}, Lebar = ${(0.3 * p.L).toFixed(2)}</p><p>Efek terowongan kuantum: ψ meluruh eksponensial di dalam penghalang.</p>`,
-    finite_well: `<p><strong class="text-white">Sumur Potensial Hingga</strong></p><p>V₀ = ${(p.E * 3).toFixed(2)}, L = ${p.L.toFixed(2)}</p><p>ψ menembus dinding — evanescent wave di luar sumur.</p>`
-  };
-  info.innerHTML = descs[p.type] || '';
-}
-
-// Init
 updateSim();
-window.addEventListener('resize', updateSim);
 lucide.createIcons();
 </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f135a69f66aacad',t:'MTc3NzAxNTMwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+</body>
 </html>
